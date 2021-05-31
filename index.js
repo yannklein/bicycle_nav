@@ -5,26 +5,40 @@ var map = new mapboxgl.Map({
   center: [139.6925947, 35.6324644], // starting position
   zoom: 12
 });
-// set the bounds of the map
-// var bounds = [[35.5324644, 139.5925947], [35.7324644, 139.7925947]];
-// map.setMaxBounds(bounds);
 
 // initialize the map canvas to interact with later
 var canvas = map.getCanvasContainer();
 
-// an arbitrary start will always be the same
-// only the end or destination will change
-var start = [139.6925947, 35.6324644 ];
-//35.6324644,139.6925947
+// initialize a start corrdinate
+let start = [];
 
-// this is where the code for the next step will go
+// Add geolocate control to the map.
+let geolocate = new mapboxgl.GeolocateControl({
+  positionOptions: {
+      enableHighAccuracy: true
+  },
+  trackUserLocation: true
+});
+
+// Add geolocate control button to the map.
+map.addControl(geolocate);
+
+// Geolocate your position and initialize the route rendering
+geolocate.on('geolocate', function (position) {
+  const latitude = position.coords.latitude;
+  const longitude = position.coords.longitude;
+  start = [longitude, latitude];
+  console.log('Your current position:', start);
+  initRoute(start);
+});
 
 // create a function to make a directions request
-function getRoute(end) {
+const getRoute = (end) => {
   // make a directions request using cycling profile
   // an arbitrary start will always be the same
   // only the end or destination will change
-  var start = [139.6925947, 35.6324644];
+  
+  // var start = [139.6925947, 35.6324644];
   var url = 'https://api.mapbox.com/directions/v5/mapbox/cycling/' + start[0] + ',' + start[1] + ';' + end[0] + ',' + end[1] + '?steps=true&geometries=geojson&access_token=' + mapboxgl.accessToken;
 
   // make an XHR request https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
@@ -84,10 +98,10 @@ function getRoute(end) {
   req.send();
 }
 
-map.on('load', function() {
+const initRoute = (start_pos) => {
   // make an initial directions request that
   // starts and ends at the same location
-  getRoute(start);
+  getRoute(start_pos);
 
   // Add starting point to the map
   map.addLayer({
@@ -114,7 +128,7 @@ map.on('load', function() {
     }
   });
   // this is where the code from the next step will go
-});
+};
 
 map.on('click', function(e) {
   var coordsObj = e.lngLat;
